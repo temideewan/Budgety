@@ -139,6 +139,22 @@ var budgetController = (function () {
 
 			return allPercentages;
 		},
+		calculateEmoji: function (obj) {
+			var safeZone = data.budget - obj;
+			if (safeZone < 100) {
+				return 0;
+			} else if (safeZone >= 100 && safeZone < 300) {
+				return 1;
+			} else if (safeZone >= 300 && safeZone < 800) {
+				return 2;
+			} else if (safeZone >= 800 && safeZone < 1200) {
+				return 3;
+			} else if (safeZone >= 1200) {
+				return 4;
+			} else {
+				console.error('something went incredibly wrong');
+			}
+		},
 
 		// make the budget calculations available publicly
 		getBudget: function () {
@@ -175,7 +191,9 @@ var UIController = (function () {
 		percentageLabel: '.budget__expenses--percentage',
 		container: '.container',
 		expensesPercentageLabel: '.item__percentage',
-		dateLabel: '.budget__title--month'
+		dateLabel: '.budget__title--month',
+		emojiLabel: '.emoji',
+		cap: '.cap'
 	};
 	var formatNumber = function (num, type) {
 		var numSplit, int, dec, type;
@@ -339,6 +357,17 @@ var UIController = (function () {
 
 			document.querySelector(DOMStrings.inputBtn).classList.toggle('red');
 		},
+		getCap: function () {
+			return parseFloat(document.querySelector(DOMStrings.cap).value);
+		},
+
+		displayEmoji: function (calculatedEmoji) {
+			var emojis, emojiDom;
+			emojis = ['😭', '😟', '☹', '🙂', '😄'];
+			emojiDom = document.querySelector(DOMStrings.emojiLabel);
+			emojiDom.textContent = emojis[calculatedEmoji];
+		},
+
 		getDOMStrings: function () {
 			return DOMStrings;
 		}
@@ -410,6 +439,10 @@ var controller = (function (budgetCtrl, UICtrl) {
 
 			// 6. calculate and update percentages
 			updatePercentages();
+
+			// 7. ctrl the emoji
+
+			ctrlEmoji();
 		}
 	};
 
@@ -435,7 +468,18 @@ var controller = (function (budgetCtrl, UICtrl) {
 
 			// 4. calculate and update percentages
 			updatePercentages();
+			// 5. update emoji
+			ctrlEmoji();
 		}
+	};
+	var ctrlEmoji = function () {
+		var lowest, emojiIndex;
+		// 1. Get the lowest budget valuet you cannot go below
+		lowest = UICtrl.getCap();
+		// 3. calculate emoji with lowest budget in mind
+		emojiIndex = budgetCtrl.calculateEmoji(lowest);
+		// 4. Display emoji as budget changes
+		UICtrl.displayEmoji(emojiIndex);
 	};
 
 	return {
